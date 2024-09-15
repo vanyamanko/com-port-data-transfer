@@ -1,17 +1,78 @@
 package org.example.demo;
 
-import javafx.fxml.FXML;
-import javafx.scene.control.Label;
+import javafx.scene.Scene;
+import javafx.scene.control.*;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
+
+import java.util.List;
 
 public class MainController {
-    @FXML
-    private Label welcomeText;
 
-    @FXML
-    protected void onHelloButtonClick() {
-//        String input = inputField.getText();
-//        outputArea.appendText(input + "\n");
-//        infoArea.appendText("Message: " + input + " | Baud rate: " + " | Send bytes: " + "\n");
-//        inputField.clear();
+    private final Stage primaryStage;
+    private final List<String> devicesList;
+    private TextArea infoArea;
+    private Integer parity = 0;
+    private final InputHandler inputHandler;
+
+    public MainController(Stage primaryStage, List<String> devicesList) {
+        this.primaryStage = primaryStage;
+        this.devicesList = devicesList;
+        this.inputHandler = new InputHandler();
+    }
+
+    public void initializeUI() {
+        TextField inputField = new TextField();
+        inputField.setPromptText("Enter text and press Enter");
+
+        TextArea outputArea = new TextArea();
+        outputArea.setEditable(false);
+        outputArea.setPromptText("Output");
+
+        Button clearButton = new Button("Clear Output");
+        clearButton.setOnAction(e -> {
+            outputArea.clear();
+            infoArea.clear();
+        });
+
+        Label portSendLabel = new Label("Choice send port number:");
+        ComboBox<String> portSendField = new ComboBox<>();
+        portSendField.getItems().addAll(devicesList);
+        portSendField.setValue("N/A");
+
+        Label portReceiveLabel = new Label("Choice receive port number:");
+        ComboBox<String> portReceiveField = new ComboBox<>();
+        portReceiveField.getItems().addAll(devicesList);
+        portReceiveField.setValue("N/A");
+
+        Label parityLabel = new Label("Select parity check option:");
+        ComboBox<String> parityOptions = new ComboBox<>();
+        parityOptions.getItems().addAll("Odd", "Even", "No Parity");
+        parityOptions.setValue("No Parity");
+        parityOptions.setOnAction(event -> {
+            String selectedParity = parityOptions.getValue();
+            parity = inputHandler.getParityValue(selectedParity);
+        });
+
+        infoArea = new TextArea();
+        infoArea.setEditable(false);
+        infoArea.setPromptText("Information");
+
+        inputField.setOnAction(e -> inputHandler.handleEnter(inputField, portSendField, portReceiveField, outputArea, infoArea, parity));
+
+        VBox controlPane = new VBox(10, clearButton, portSendLabel, portSendField, portReceiveLabel, portReceiveField, parityLabel, parityOptions);
+        controlPane.setStyle("-fx-padding: 10; -fx-spacing: 10;");
+        BorderPane mainLayout = new BorderPane();
+        mainLayout.setTop(inputField);
+        mainLayout.setCenter(outputArea);
+        mainLayout.setRight(controlPane);
+        mainLayout.setBottom(infoArea);
+
+        StyleManager.applyStyles(mainLayout, inputField, outputArea, infoArea, clearButton, controlPane, portSendField, portReceiveField, parityOptions);
+
+        Scene scene = new Scene(mainLayout, 600, 400);
+        primaryStage.setScene(scene);
+        primaryStage.show();
     }
 }
