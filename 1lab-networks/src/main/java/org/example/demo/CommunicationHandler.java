@@ -7,7 +7,7 @@ import javafx.scene.control.TextField;
 
 import java.util.Objects;
 
-public class InputHandler {
+public class CommunicationHandler {
 
     private static final String ERROR_MESSAGE = "Ports are not connected.";
 

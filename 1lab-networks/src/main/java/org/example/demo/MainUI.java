@@ -8,18 +8,18 @@ import javafx.stage.Stage;
 
 import java.util.List;
 
-public class MainController {
+public class MainUI {
 
     private final Stage primaryStage;
     private final List<String> devicesList;
     private TextArea infoArea;
     private Integer parity = 0;
-    private final InputHandler inputHandler;
+    private final CommunicationHandler communicationHandler;
 
-    public MainController(Stage primaryStage, List<String> devicesList) {
+    public MainUI(Stage primaryStage, List<String> devicesList) {
         this.primaryStage = primaryStage;
         this.devicesList = devicesList;
-        this.inputHandler = new InputHandler();
+        this.communicationHandler = new CommunicationHandler();
     }
 
     public void initializeUI() {
@@ -52,14 +52,14 @@ public class MainController {
         parityOptions.setValue("No Parity");
         parityOptions.setOnAction(event -> {
             String selectedParity = parityOptions.getValue();
-            parity = inputHandler.getParityValue(selectedParity);
+            parity = communicationHandler.getParityValue(selectedParity);
         });
 
         infoArea = new TextArea();
         infoArea.setEditable(false);
         infoArea.setPromptText("Information");
 
-        inputField.setOnAction(e -> inputHandler.handleEnter(inputField, portSendField, portReceiveField, outputArea, infoArea, parity));
+        inputField.setOnAction(e -> communicationHandler.handleEnter(inputField, portSendField, portReceiveField, outputArea, infoArea, parity));
 
         VBox controlPane = new VBox(10, clearButton, portSendLabel, portSendField, portReceiveLabel, portReceiveField, parityLabel, parityOptions);
         controlPane.setStyle("-fx-padding: 10; -fx-spacing: 10;");

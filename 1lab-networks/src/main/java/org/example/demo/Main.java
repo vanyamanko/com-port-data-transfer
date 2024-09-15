@@ -27,7 +27,7 @@ public class Main extends Application {
     @Override
     public void start(Stage primaryStage) {
         primaryStage.setTitle("Networks");
-        MainController controller = new MainController(primaryStage, devicesList);
+        MainUI controller = new MainUI(primaryStage, devicesList);
         controller.initializeUI();
     }
 }
