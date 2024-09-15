@@ -48,7 +48,7 @@ public class MainUI {
 
         Label parityLabel = new Label("Select parity check option:");
         ComboBox<String> parityOptions = new ComboBox<>();
-        parityOptions.getItems().addAll("Odd", "Even", "No Parity");
+        parityOptions.getItems().addAll("Even", "Odd", "Mark", "Space", "No Parity");
         parityOptions.setValue("No Parity");
         parityOptions.setOnAction(event -> {
             String selectedParity = parityOptions.getValue();

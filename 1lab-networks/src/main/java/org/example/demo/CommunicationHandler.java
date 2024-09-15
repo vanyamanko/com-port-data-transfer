@@ -58,8 +58,10 @@ public class CommunicationHandler {
 
     public int getParityValue(String selectedParity) {
         return switch (selectedParity) {
-            case "Odd" -> 2;
             case "Even" -> 1;
+            case "Odd" -> 2;
+            case "Mark" -> 3;
+            case "Space" -> 4;
             default -> 0;
         };
     }
