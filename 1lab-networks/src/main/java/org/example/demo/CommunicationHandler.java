@@ -34,7 +34,7 @@ public class CommunicationHandler {
             if (bytesWritten > 0) {
                 inputField.clear();
             } else {
-                errorUI.showErrorDialog(ERROR_MESSAGE);
+                errorUI.showErrorDialog("Failed to write data.");
             }
 
             byte[] readBuffer = new byte[1024];
@@ -45,7 +45,7 @@ public class CommunicationHandler {
                 outputArea.appendText(receivedData + "\n");
                 infoArea.appendText("Message: " + receivedData + " | Baud rate: 9600" + " | Bytes sent: " + numRead + "\n");
             } else {
-                errorUI.showErrorDialog(ERROR_MESSAGE);
+                errorUI.showErrorDialog("Failed to read data.");
             }
 
             sendPort.closePort();
