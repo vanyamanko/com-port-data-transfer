@@ -5,6 +5,8 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 
+import java.io.ByteArrayOutputStream;
+import java.util.Arrays;
 import java.util.Objects;
 
 public class CommunicationHandler {
@@ -58,16 +60,42 @@ public class CommunicationHandler {
                 }
             }
 
-            byte[] readBuffer = new byte[1024];
-            int numRead = receivePort.readBytes(readBuffer, readBuffer.length);
+            byte[] readByte = new byte[1];
+            byte[] flagBytes = new byte[2];
+            byte[] addressBytes = new byte[2];
+            boolean dataStartFlag = false;
+            ByteArrayOutputStream dataBytes = new ByteArrayOutputStream();
+            while (receivePort.readBytes(readByte, readByte.length) > 0) {
+                byte currentByte = readByte[0];
+                flagBytes[0] = flagBytes[1];
+                flagBytes[1] = currentByte;
 
-            if (numRead > 0) {
-                String receivedPackage = new String(readBuffer, 0, numRead);
-                outputArea.appendText(receivedPackage + "\n");
-                infoArea.appendText("Message: " + receivedPackage + " | Baud rate: 9600" + " | Bytes sent: " + numRead + " | Package structure: \n");
-            } else {
-                errorUI.showErrorDialog("Failed to read data.");
+                if (Arrays.equals(flagBytes, FLAG.getBytes())) {
+                    receivePort.readBytes(addressBytes, addressBytes.length);
+                    dataStartFlag = true;
+
+                    if (dataBytes.size() != 0) {
+                        byte[] currentData = dataBytes.toByteArray();
+                        dataBytes.reset();
+                        dataBytes.write(currentData, 0, currentData.length - 2);
+                        String receivedBytes = dataBytes.toString();
+                        outputArea.appendText(receivedBytes);
+                        infoArea.appendText("Message: " + receivedBytes + " | Baud rate: 9600" + " | Bytes in package: " + dataBytes.size() + " | Package structure: \n");
+                        dataBytes.reset();
+                    }
+                    continue;
+                }
+                if (dataStartFlag) {
+                    dataBytes.write(currentByte);
+                }
+
             }
+            byte[] currentData = dataBytes.toByteArray();
+            dataBytes.reset();
+            dataBytes.write(currentData, 0, currentData.length - 1);
+            String receivedBytes = dataBytes.toString();
+            outputArea.appendText(receivedBytes + "\n");
+            infoArea.appendText("Message: " + receivedBytes + " | Baud rate: 9600" + " | Bytes in package: " + dataBytes.size() + " | Package structure: \n");
 
             sendPort.closePort();
             receivePort.closePort();
