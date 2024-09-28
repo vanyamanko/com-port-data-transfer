@@ -4,6 +4,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.TextFlow;
 import javafx.stage.Stage;
 
 import java.util.List;
@@ -12,7 +13,7 @@ public class MainUI {
 
     private final Stage primaryStage;
     private final List<String> devicesList;
-    private TextArea infoArea;
+    private final TextFlow infoArea = new TextFlow();
     private Integer parity = 0;
     private final CommunicationHandler communicationHandler;
 
@@ -33,7 +34,7 @@ public class MainUI {
         Button clearButton = new Button("Clear Output");
         clearButton.setOnAction(e -> {
             outputArea.clear();
-            infoArea.clear();
+            infoArea.getChildren().clear();
         });
 
         Label portSendLabel = new Label("Choice send port number:");
@@ -55,9 +56,9 @@ public class MainUI {
             parity = communicationHandler.getParityValue(selectedParity);
         });
 
-        infoArea = new TextArea();
-        infoArea.setEditable(false);
-        infoArea.setPromptText("Information");
+        infoArea.setAccessibleHelp("Information");
+        infoArea.setMinWidth(400);
+        infoArea.setMinHeight(200);
 
         inputField.setOnAction(e -> communicationHandler.handleEnter(inputField, portSendField, portReceiveField, outputArea, infoArea, parity));
 

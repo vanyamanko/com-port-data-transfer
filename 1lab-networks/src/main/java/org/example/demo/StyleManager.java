@@ -6,6 +6,7 @@ import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.TextFlow;
 
 public class StyleManager {
 
@@ -29,7 +30,8 @@ public class StyleManager {
         throw new UnsupportedOperationException("Utility class cannot be instantiated");
     }
 
-    public static void applyStyles(BorderPane mainLayout, TextField inputField, TextArea outputArea, TextArea infoArea, Button clearButton, VBox controlPane, ComboBox<String> portSendField, ComboBox<String> portReceiveField, ComboBox<String> parityOptions) {
+    public static void applyStyles(BorderPane mainLayout, TextField inputField, TextArea outputArea, TextFlow infoArea, Button clearButton, VBox controlPane,
+                                   ComboBox<String> portSendField, ComboBox<String> portReceiveField, ComboBox<String> parityOptions) {
         controlPane.setStyle("-fx-padding: 10; -fx-spacing: 10;");
         mainLayout.setStyle(MAIN_LAYOUT_STYLE);
         inputField.setStyle(INPUT_STYLE);
