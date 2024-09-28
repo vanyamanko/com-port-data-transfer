@@ -10,6 +10,10 @@ import java.util.Objects;
 public class CommunicationHandler {
 
     private static final String ERROR_MESSAGE = "Ports are not connected.";
+    private static final String FLAG = "$p";
+    private static final int DESTINATION_ADDRESS = 0;
+    private static final int FCS = 0;
+    private static final int CHUNK_SIZE = 16;
 
     private final ErrorUI errorUI = new ErrorUI();
 
@@ -28,22 +32,39 @@ public class CommunicationHandler {
             receivePort.setComPortParameters(9600, 8, 1, parity);
 
             String message = inputField.getText();
-            byte[] data = message.getBytes();
+            byte[] messageBytes = message.getBytes();
+            int totalChunks = (int) Math.ceil((double) messageBytes.length / CHUNK_SIZE);
 
-            int bytesWritten = sendPort.writeBytes(data, data.length);
-            if (bytesWritten > 0) {
-                inputField.clear();
-            } else {
-                errorUI.showErrorDialog("Failed to write data.");
+            for (int i = 0; i < totalChunks; i++) {
+                int sourceAddress = Integer.parseInt(String.valueOf(portSendField.getValue()
+                        .charAt(portSendField.getValue().length() - 1)));
+
+                int start = i * CHUNK_SIZE;
+                int length = Math.min(CHUNK_SIZE, messageBytes.length - start);
+
+                byte[] chunk = new byte[length];
+                System.arraycopy(messageBytes, start, chunk, 0, length);
+
+                String chunkMessage = new String(chunk);
+
+                String messagePackage = FLAG + DESTINATION_ADDRESS + sourceAddress + chunkMessage + FCS;
+
+                byte[] data = messagePackage.getBytes();
+                int bytesWritten = sendPort.writeBytes(data, data.length);
+                if (bytesWritten > 0) {
+                    inputField.clear();
+                } else {
+                    errorUI.showErrorDialog("Failed to write data.");
+                }
             }
 
             byte[] readBuffer = new byte[1024];
             int numRead = receivePort.readBytes(readBuffer, readBuffer.length);
 
             if (numRead > 0) {
-                String receivedData = new String(readBuffer, 0, numRead);
-                outputArea.appendText(receivedData + "\n");
-                infoArea.appendText("Message: " + receivedData + " | Baud rate: 9600" + " | Bytes sent: " + numRead + "\n");
+                String receivedPackage = new String(readBuffer, 0, numRead);
+                outputArea.appendText(receivedPackage + "\n");
+                infoArea.appendText("Message: " + receivedPackage + " | Baud rate: 9600" + " | Bytes sent: " + numRead + " | Package structure: \n");
             } else {
                 errorUI.showErrorDialog("Failed to read data.");
             }
