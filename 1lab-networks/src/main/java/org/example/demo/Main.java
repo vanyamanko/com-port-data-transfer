@@ -1,6 +1,8 @@
 package org.example.demo;
 
 import javafx.application.Application;
+import javafx.scene.Scene;
+import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
 
 import java.io.File;
@@ -26,6 +28,12 @@ public class Main extends Application {
 
     @Override
     public void start(Stage primaryStage) {
+        Pane mainWindow = new Pane();
+        Scene scene = new Scene(mainWindow, 800, 750);
+        primaryStage.setScene(scene);
+        primaryStage.setResizable(false);
+        primaryStage.setWidth(800);
+        primaryStage.setHeight(750);
         primaryStage.setTitle("Networks");
         MainUI controller = new MainUI(primaryStage, devicesList);
         controller.initializeUI();
