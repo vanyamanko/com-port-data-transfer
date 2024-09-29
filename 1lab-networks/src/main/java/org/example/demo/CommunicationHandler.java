@@ -22,7 +22,7 @@ public class CommunicationHandler {
     private static final char ESC = '\u001B';
     private static final char BYTE_STUFFING = 0x01;
     private static final String ESC_BYTE_STUFFING = "ESC0x01";
-    private String receivedMassege;
+    private final ByteArrayOutputStream receivedMassege = new ByteArrayOutputStream();
 
     private final ErrorUI errorUI = new ErrorUI();
 
@@ -122,8 +122,8 @@ public class CommunicationHandler {
         }
         removeLastBytes(dataBytes, 1);
         displayPackageData(infoArea, packageStructure, dataBytes);
-        outputArea.appendText(receivedMassege + '\n');
-        receivedMassege = "";
+        outputArea.appendText(receivedMassege.toString() + '\n');
+        receivedMassege.reset();
     }
 
     private void shiftArray(byte[] array, byte newValue) {
@@ -178,7 +178,7 @@ public class CommunicationHandler {
     private void displayPackageData(TextFlow infoArea, ByteArrayOutputStream packageStructure,
                                     ByteArrayOutputStream dataBytes) {
 
-        receivedMassege += dataBytes.toString();
+        receivedMassege.writeBytes(dataBytes.toByteArray());
 
         Text info = new Text("Message: " + dataBytes + " | Baud rate: 9600" + " | Bytes in package: " + dataBytes.size()
                 + " | Package structure: ");
