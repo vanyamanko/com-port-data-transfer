@@ -1,12 +1,11 @@
 package org.example.demo;
 
+import java.io.File;
+import java.util.ArrayList;
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
-
-import java.io.File;
-import java.util.ArrayList;
 
 public class Main extends Application {
 
@@ -19,7 +18,9 @@ public class Main extends Application {
 
     private static void loadDevices() {
         File devDir = new File("/dev");
-        File[] devices = devDir.listFiles((dir, name) -> name.startsWith("ttys") && name.length() == 7);
+        File[] devices = devDir.listFiles(
+            (dir, name) -> name.startsWith("ttys") && name.length() == 7
+        );
         assert devices != null;
         for (File device : devices) {
             devicesList.add(device.getName());

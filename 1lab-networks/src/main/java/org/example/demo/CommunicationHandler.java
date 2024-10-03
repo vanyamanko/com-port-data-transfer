@@ -1,16 +1,15 @@
 package org.example.demo;
 
 import com.fazecast.jSerialComm.SerialPort;
+import java.io.ByteArrayOutputStream;
+import java.util.Arrays;
+import java.util.Objects;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
-
-import java.io.ByteArrayOutputStream;
-import java.util.Arrays;
-import java.util.Objects;
 
 public class CommunicationHandler {
 
@@ -22,19 +21,33 @@ public class CommunicationHandler {
     private static final char ESC = '\u001B';
     private static final char BYTE_STUFFING = 0x01;
     private static final String ESC_BYTE_STUFFING = "ESC0x01";
-    private final ByteArrayOutputStream receivedMassege = new ByteArrayOutputStream();
+    private final ByteArrayOutputStream receivedMassege =
+        new ByteArrayOutputStream();
 
     private final ErrorUI errorUI = new ErrorUI();
 
-    public void handleEnter(TextField inputField, ComboBox<String> portSendField, ComboBox<String> portReceiveField, TextArea outputArea, TextFlow infoArea, int parity) {
+    public void handleEnter(
+        TextField inputField,
+        ComboBox<String> portSendField,
+        ComboBox<String> portReceiveField,
+        TextArea outputArea,
+        TextFlow infoArea,
+        int parity
+    ) {
         if (arePortsInvalid(portSendField, portReceiveField)) {
             inputField.clear();
             errorUI.showErrorDialog("Select the correct port to send data.");
             return;
         }
 
-        SerialPort sendPort = openPort("/dev/" + portSendField.getValue(), parity);
-        SerialPort receivePort = openPort("/dev/" + portReceiveField.getValue(), parity);
+        SerialPort sendPort = openPort(
+            "/dev/" + portSendField.getValue(),
+            parity
+        );
+        SerialPort receivePort = openPort(
+            "/dev/" + portReceiveField.getValue(),
+            parity
+        );
 
         if (sendPort != null && receivePort != null) {
             processSendingData(inputField, portSendField, sendPort);
@@ -47,8 +60,14 @@ public class CommunicationHandler {
         }
     }
 
-    private boolean arePortsInvalid(ComboBox<String> portSendField, ComboBox<String> portReceiveField) {
-        return Objects.equals(portSendField.getValue(), "N/A") || Objects.equals(portReceiveField.getValue(), "N/A");
+    private boolean arePortsInvalid(
+        ComboBox<String> portSendField,
+        ComboBox<String> portReceiveField
+    ) {
+        return (
+            Objects.equals(portSendField.getValue(), "N/A") ||
+            Objects.equals(portReceiveField.getValue(), "N/A")
+        );
     }
 
     private SerialPort openPort(String portName, int parity) {
@@ -60,17 +79,31 @@ public class CommunicationHandler {
         return null;
     }
 
-    private void processSendingData(TextField inputField, ComboBox<String> portSendField, SerialPort sendPort) {
+    private void processSendingData(
+        TextField inputField,
+        ComboBox<String> portSendField,
+        SerialPort sendPort
+    ) {
         String message = inputField.getText();
         byte[] messageBytes = message.getBytes();
-        int totalChunks = (int) Math.ceil((double) messageBytes.length / CHUNK_SIZE);
+        int totalChunks = (int) Math.ceil(
+            (double) messageBytes.length / CHUNK_SIZE
+        );
 
         for (int i = 0; i < totalChunks; i++) {
-            int sourceAddress = Integer.parseInt(String.valueOf(portSendField.getValue()
-                    .charAt(portSendField.getValue().length() - 1)));
+            int sourceAddress = Integer.parseInt(
+                String.valueOf(
+                    portSendField
+                        .getValue()
+                        .charAt(portSendField.getValue().length() - 1)
+                )
+            );
 
             byte[] chunk = getChunk(messageBytes, i);
-            String messagePackage = constructMessagePackage(chunk, sourceAddress);
+            String messagePackage = constructMessagePackage(
+                chunk,
+                sourceAddress
+            );
 
             byte[] data = messagePackage.getBytes();
             int bytesWritten = sendPort.writeBytes(data, data.length);
@@ -93,12 +126,21 @@ public class CommunicationHandler {
 
     private String constructMessagePackage(byte[] chunk, int sourceAddress) {
         String chunkMessage = new String(chunk);
-        String replacedMessage = chunkMessage.replace(FLAG, ESC + String.valueOf(BYTE_STUFFING));
+        String replacedMessage = chunkMessage.replace(
+            FLAG,
+            ESC + String.valueOf(BYTE_STUFFING)
+        );
 
-        return FLAG + DESTINATION_ADDRESS + sourceAddress + replacedMessage + FCS;
+        return (
+            FLAG + DESTINATION_ADDRESS + sourceAddress + replacedMessage + FCS
+        );
     }
 
-    private void processReceivingData(SerialPort receivePort, TextArea outputArea, TextFlow infoArea) {
+    private void processReceivingData(
+        SerialPort receivePort,
+        TextArea outputArea,
+        TextFlow infoArea
+    ) {
         ByteArrayOutputStream packageStructure = new ByteArrayOutputStream();
         ByteArrayOutputStream dataBytes = new ByteArrayOutputStream();
         byte[] readByte = new byte[1];
@@ -111,13 +153,25 @@ public class CommunicationHandler {
             shiftArray(flagBytes, currentByte);
 
             if (Arrays.equals(flagBytes, FLAG.getBytes())) {
-                handleNewFlag(receivePort, packageStructure, dataBytes, addressBytes, infoArea);
+                handleNewFlag(
+                    receivePort,
+                    packageStructure,
+                    dataBytes,
+                    addressBytes,
+                    infoArea
+                );
                 dataStartFlag = true;
                 continue;
             }
 
             if (dataStartFlag) {
-                handleDataByte(currentByte, readByte, receivePort, packageStructure, dataBytes);
+                handleDataByte(
+                    currentByte,
+                    readByte,
+                    receivePort,
+                    packageStructure,
+                    dataBytes
+                );
             }
         }
         removeLastBytes(dataBytes, 1);
@@ -131,8 +185,13 @@ public class CommunicationHandler {
         array[1] = newValue;
     }
 
-    private void handleNewFlag(SerialPort receivePort, ByteArrayOutputStream packageStructure, ByteArrayOutputStream dataBytes,
-                               byte[] addressBytes, TextFlow infoArea) {
+    private void handleNewFlag(
+        SerialPort receivePort,
+        ByteArrayOutputStream packageStructure,
+        ByteArrayOutputStream dataBytes,
+        byte[] addressBytes,
+        TextFlow infoArea
+    ) {
         receivePort.readBytes(addressBytes, addressBytes.length);
 
         if (packageStructure.size() != 0) {
@@ -148,7 +207,12 @@ public class CommunicationHandler {
         if (dataBytes.size() != 0) {
             removeLastBytes(dataBytes, 2);
             displayPackageData(infoArea, packageStructure, dataBytes);
-            resetStreams(packageStructure, dataBytes, FLAG.getBytes(), addressBytes);
+            resetStreams(
+                packageStructure,
+                dataBytes,
+                FLAG.getBytes(),
+                addressBytes
+            );
         }
     }
 
@@ -160,8 +224,13 @@ public class CommunicationHandler {
         }
     }
 
-    private void handleDataByte(byte currentByte, byte[] readByte, SerialPort receivePort,
-                                ByteArrayOutputStream packageStructure, ByteArrayOutputStream dataBytes) {
+    private void handleDataByte(
+        byte currentByte,
+        byte[] readByte,
+        SerialPort receivePort,
+        ByteArrayOutputStream packageStructure,
+        ByteArrayOutputStream dataBytes
+    ) {
         if (currentByte == ESC) {
             packageStructure.writeBytes("ESC".getBytes());
             receivePort.readBytes(readByte, readByte.length);
@@ -175,20 +244,31 @@ public class CommunicationHandler {
         }
     }
 
-    private void displayPackageData(TextFlow infoArea, ByteArrayOutputStream packageStructure,
-                                    ByteArrayOutputStream dataBytes) {
-
+    private void displayPackageData(
+        TextFlow infoArea,
+        ByteArrayOutputStream packageStructure,
+        ByteArrayOutputStream dataBytes
+    ) {
         receivedMassege.writeBytes(dataBytes.toByteArray());
 
-        Text info = new Text("Message: " + dataBytes + " | Baud rate: 9600" + " | Bytes in package: " + dataBytes.size()
-                + " | Package structure: ");
+        Text info = new Text(
+            "Message: " +
+            dataBytes +
+            " | Baud rate: 9600" +
+            " | Bytes in package: " +
+            dataBytes.size() +
+            " | Package structure: "
+        );
         infoArea.getChildren().add(info);
 
         addPackageStructureToInfo(packageStructure, infoArea);
         infoArea.getChildren().addAll(new Text("\n"));
     }
 
-    private void addPackageStructureToInfo(ByteArrayOutputStream packageStructure, TextFlow infoArea) {
+    private void addPackageStructureToInfo(
+        ByteArrayOutputStream packageStructure,
+        TextFlow infoArea
+    ) {
         String[] parts = packageStructure.toString().split(ESC_BYTE_STUFFING);
         for (int i = 0; i < parts.length; i++) {
             Text normalText = new Text(parts[i]);
@@ -202,8 +282,12 @@ public class CommunicationHandler {
         }
     }
 
-    private void resetStreams(ByteArrayOutputStream packageStructure, ByteArrayOutputStream dataBytes,
-                              byte[] flagBytes, byte[] addressBytes) {
+    private void resetStreams(
+        ByteArrayOutputStream packageStructure,
+        ByteArrayOutputStream dataBytes,
+        byte[] flagBytes,
+        byte[] addressBytes
+    ) {
         dataBytes.reset();
         packageStructure.reset();
         packageStructure.writeBytes(flagBytes);

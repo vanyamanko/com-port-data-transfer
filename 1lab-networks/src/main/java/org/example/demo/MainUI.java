@@ -1,13 +1,12 @@
 package org.example.demo;
 
+import java.util.List;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.TextFlow;
 import javafx.stage.Stage;
-
-import java.util.List;
 
 public class MainUI {
 
@@ -49,7 +48,9 @@ public class MainUI {
 
         Label parityLabel = new Label("Select parity check option:");
         ComboBox<String> parityOptions = new ComboBox<>();
-        parityOptions.getItems().addAll("Even", "Odd", "Mark", "Space", "No Parity");
+        parityOptions
+            .getItems()
+            .addAll("Even", "Odd", "Mark", "Space", "No Parity");
         parityOptions.setValue("No Parity");
         parityOptions.setOnAction(event -> {
             String selectedParity = parityOptions.getValue();
@@ -60,17 +61,44 @@ public class MainUI {
         infoArea.setMinWidth(400);
         infoArea.setMinHeight(200);
 
-        inputField.setOnAction(e -> communicationHandler.handleEnter(inputField, portSendField, portReceiveField, outputArea, infoArea, parity));
+        inputField.setOnAction(e ->
+            communicationHandler.handleEnter(
+                inputField,
+                portSendField,
+                portReceiveField,
+                outputArea,
+                infoArea,
+                parity
+            )
+        );
 
-        VBox controlPane = new VBox(10, clearButton, portSendLabel, portSendField, portReceiveLabel, portReceiveField, parityLabel, parityOptions);
+        VBox controlPane = new VBox(
+            10,
+            clearButton,
+            portSendLabel,
+            portSendField,
+            portReceiveLabel,
+            portReceiveField,
+            parityLabel,
+            parityOptions
+        );
         controlPane.setStyle("-fx-padding: 10; -fx-spacing: 10;");
         BorderPane mainLayout = new BorderPane();
         mainLayout.setTop(inputField);
         mainLayout.setCenter(outputArea);
         mainLayout.setRight(controlPane);
         mainLayout.setBottom(infoArea);
-
-        StyleManager.applyStyles(mainLayout, inputField, outputArea, infoArea, clearButton, controlPane, portSendField, portReceiveField, parityOptions);
+        StyleManager.applyStyles(
+            mainLayout,
+            inputField,
+            outputArea,
+            infoArea,
+            clearButton,
+            controlPane,
+            portSendField,
+            portReceiveField,
+            parityOptions
+        );
 
         Scene scene = new Scene(mainLayout, 600, 400);
         primaryStage.setScene(scene);
