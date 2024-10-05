@@ -1,4 +1,4 @@
-package org.example.demo;
+package org.example.demo.ui;
 
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;

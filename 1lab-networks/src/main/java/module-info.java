@@ -16,4 +16,10 @@ module org.example.demo {
 
     opens org.example.demo to javafx.fxml;
     exports org.example.demo;
+    exports org.example.demo.ui;
+    opens org.example.demo.ui to javafx.fxml;
+    exports org.example.demo.handler;
+    opens org.example.demo.handler to javafx.fxml;
+    exports org.example.demo.service;
+    opens org.example.demo.service to javafx.fxml;
 }

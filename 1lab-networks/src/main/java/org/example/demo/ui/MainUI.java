@@ -1,4 +1,4 @@
-package org.example.demo;
+package org.example.demo.ui;
 
 import java.util.List;
 import javafx.scene.Scene;
@@ -7,6 +7,7 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.TextFlow;
 import javafx.stage.Stage;
+import org.example.demo.handler.CommunicationHandler;
 
 public class MainUI {
 
