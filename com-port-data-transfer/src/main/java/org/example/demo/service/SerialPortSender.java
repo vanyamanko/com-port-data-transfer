@@ -41,7 +41,9 @@ public class SerialPortSender {
             );
 
             byte[] data = messagePackage.getBytes();
+            byte fcs = (byte) SerialPortManager.calculateCRC8(chunk);
             int bytesWritten = sendPort.writeBytes(data, data.length);
+            sendPort.writeBytes(new byte[] { fcs }, 1);
             if (bytesWritten <= 0) {
                 errorUI.showErrorDialog("Failed to write data.");
             }
@@ -61,9 +63,7 @@ public class SerialPortSender {
             ESC + String.valueOf(BYTE_STUFFING)
         );
 
-        return (
-            FLAG + destinationAddress + sourceAddress + replacedMessage + FCS
-        );
+        return (FLAG + destinationAddress + sourceAddress + replacedMessage);
     }
 
     private byte[] getChunk(byte[] messageBytes, int chunkIndex) {
