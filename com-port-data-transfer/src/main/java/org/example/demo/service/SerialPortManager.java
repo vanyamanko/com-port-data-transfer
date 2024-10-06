@@ -1,5 +1,7 @@
 package org.example.demo.service;
 
+import static org.example.demo.service.SerialPortConstants.*;
+
 import com.fazecast.jSerialComm.SerialPort;
 import java.util.Objects;
 import javafx.scene.control.ComboBox;
@@ -41,5 +43,21 @@ public class SerialPortManager {
             )
         );
         return address;
+    }
+
+    public static int calculateCRC8(byte[] data) {
+        int crc = 0x00;
+        for (byte b : data) {
+            crc ^= (b & 0xFF);
+
+            for (int i = 0; i < 8; i++) {
+                if ((crc & 0x80) != 0) {
+                    crc = (crc << 1) ^ POLYNOMIAL;
+                } else {
+                    crc <<= 1;
+                }
+            }
+        }
+        return crc & 0xFF;
     }
 }
