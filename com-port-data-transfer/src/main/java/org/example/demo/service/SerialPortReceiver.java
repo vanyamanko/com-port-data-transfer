@@ -4,6 +4,7 @@ import static org.example.demo.service.SerialPortConstants.*;
 
 import com.fazecast.jSerialComm.SerialPort;
 import java.io.ByteArrayOutputStream;
+import java.nio.ByteBuffer;
 import java.util.Arrays;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextArea;
@@ -61,8 +62,7 @@ public class SerialPortReceiver {
                 );
             }
         }
-        removeLastBytes(dataBytes, 1);
-        displayPackageData(infoArea, packageStructure, dataBytes);
+        fcsCheckAndDisplay(infoArea, packageStructure, dataBytes);
         outputArea.appendText(receivedMassege.toString() + '\n');
         receivedMassege.reset();
     }
@@ -117,8 +117,8 @@ public class SerialPortReceiver {
         }
 
         if (dataBytes.size() != 0) {
-            removeLastBytes(dataBytes, 2);
-            displayPackageData(infoArea, packageStructure, dataBytes);
+            getAndRemoveLastByte(dataBytes);
+            fcsCheckAndDisplay(infoArea, packageStructure, dataBytes);
             resetStreams(
                 packageStructure,
                 dataBytes,
@@ -129,18 +129,28 @@ public class SerialPortReceiver {
         return true;
     }
 
-    private void removeLastBytes(ByteArrayOutputStream stream, int n) {
-        if (stream.size() >= n) {
-            byte[] currentData = stream.toByteArray();
-            stream.reset();
-            stream.write(currentData, 0, currentData.length - n);
+    private byte getAndRemoveLastByte(ByteArrayOutputStream stream)
+        throws ArrayIndexOutOfBoundsException {
+        if (stream.size() == 0) {
+            throw new ArrayIndexOutOfBoundsException(
+                "Error: Stream is empty, last byte cannot be removed."
+            );
         }
+        byte[] currentData = stream.toByteArray();
+
+        byte removedByte = currentData[currentData.length - 1];
+
+        stream.reset();
+        stream.write(currentData, 0, currentData.length - 1);
+
+        return removedByte;
     }
 
     private void displayPackageData(
         TextFlow infoArea,
         ByteArrayOutputStream packageStructure,
-        ByteArrayOutputStream dataBytes
+        ByteArrayOutputStream dataBytes,
+        int unsignedFcsCalculated
     ) {
         if (dataBytes.size() != 0) {
             receivedMassege.writeBytes(dataBytes.toByteArray());
@@ -158,12 +168,18 @@ public class SerialPortReceiver {
         );
         infoArea.getChildren().add(info);
 
-        addPackageStructureToInfo(packageStructure, infoArea);
+        getAndRemoveLastByte(packageStructure);
+        addPackageStructureToInfo(
+            packageStructure,
+            unsignedFcsCalculated,
+            infoArea
+        );
         infoArea.getChildren().addAll(new Text("\n"));
     }
 
     private void addPackageStructureToInfo(
         ByteArrayOutputStream packageStructure,
+        int unsignedFcsCalculated,
         TextFlow infoArea
     ) {
         String[] parts = packageStructure.toString().split(ESC_BYTE_STUFFING);
@@ -177,6 +193,11 @@ public class SerialPortReceiver {
                 infoArea.getChildren().add(blueText);
             }
         }
+        Text unsignedFcsCalculatedText = new Text(
+            Integer.toString(unsignedFcsCalculated)
+        );
+        unsignedFcsCalculatedText.setFill(Color.GREEN);
+        infoArea.getChildren().add(unsignedFcsCalculatedText);
     }
 
     private void resetStreams(
@@ -189,5 +210,34 @@ public class SerialPortReceiver {
         packageStructure.reset();
         packageStructure.writeBytes(flagBytes);
         packageStructure.writeBytes(addressBytes);
+    }
+
+    private void fcsCheckAndDisplay(
+        TextFlow infoArea,
+        ByteArrayOutputStream packageStructure,
+        ByteArrayOutputStream dataBytes
+    ) {
+        byte fcsReceived = getAndRemoveLastByte(dataBytes);
+        byte fcsCalculated = (byte) SerialPortManager.calculateCRC8(
+            dataBytes.toByteArray()
+        );
+        int unsignedFcsReceived = fcsReceived & 0xFF;
+        int unsignedFcsCalculated = fcsCalculated & 0xFF;
+
+        if (unsignedFcsReceived == unsignedFcsCalculated) {
+            displayPackageData(
+                infoArea,
+                packageStructure,
+                dataBytes,
+                unsignedFcsCalculated
+            );
+        } else {
+            throw new IllegalArgumentException(
+                "FCS check failed. Received: " +
+                unsignedFcsReceived +
+                ", Calculated: " +
+                unsignedFcsCalculated
+            );
+        }
     }
 }
