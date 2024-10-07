@@ -37,12 +37,11 @@ public class SerialPortManager {
     }
 
     public int getPortAddress(ComboBox<String> portField) {
-        int address = Integer.parseInt(
+        return Integer.parseInt(
             String.valueOf(
                 portField.getValue().charAt(portField.getValue().length() - 1)
             )
         );
-        return address;
     }
 
     public static int calculateCRC8(byte[] data) {

@@ -4,7 +4,6 @@ import static org.example.demo.service.SerialPortConstants.*;
 
 import com.fazecast.jSerialComm.SerialPort;
 import java.io.ByteArrayOutputStream;
-import java.nio.ByteBuffer;
 import java.util.Arrays;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextArea;
@@ -62,8 +61,12 @@ public class SerialPortReceiver {
                 );
             }
         }
-        fcsCheckAndDisplay(infoArea, packageStructure, dataBytes);
-        outputArea.appendText(receivedMassege.toString() + '\n');
+        if (dataBytes.size() != 0 && packageStructure.size() != 0) {
+            fcsCheckAndDisplay(infoArea, packageStructure, dataBytes);
+            outputArea.appendText(receivedMassege.toString() + '\n');
+        } else {
+            errorUI.showErrorDialog("Ports are not connected.");
+        }
         receivedMassege.reset();
     }
 
@@ -88,6 +91,11 @@ public class SerialPortReceiver {
     }
 
     private void shiftArray(byte[] array, byte newValue) {
+        if (array == null || array.length < 2) {
+            throw new IllegalArgumentException(
+                "Array must have at least 2 elements."
+            );
+        }
         array[0] = array[1];
         array[1] = newValue;
     }
@@ -194,7 +202,7 @@ public class SerialPortReceiver {
             }
         }
         Text unsignedFcsCalculatedText = new Text(
-            Integer.toString(unsignedFcsCalculated)
+            "0x" + Integer.toHexString(unsignedFcsCalculated).toUpperCase()
         );
         unsignedFcsCalculatedText.setFill(Color.GREEN);
         infoArea.getChildren().add(unsignedFcsCalculatedText);
