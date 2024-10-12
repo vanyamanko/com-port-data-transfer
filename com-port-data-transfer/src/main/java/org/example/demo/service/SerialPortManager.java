@@ -59,4 +59,12 @@ public class SerialPortManager {
         }
         return crc & 0xFF;
     }
+
+    public void delay(int ms) {
+        try {
+            Thread.sleep(ms);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
 }

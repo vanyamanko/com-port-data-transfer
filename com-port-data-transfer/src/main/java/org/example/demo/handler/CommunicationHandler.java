@@ -48,7 +48,8 @@ public class CommunicationHandler {
                 inputField,
                 portSendField,
                 portReceiveField,
-                sendPort
+                sendPort,
+                receivePort
             );
             serialPortReceiver.processReceivingData(
                 receivePort,

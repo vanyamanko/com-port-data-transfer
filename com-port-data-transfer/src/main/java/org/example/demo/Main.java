@@ -31,10 +31,10 @@ public class Main extends Application {
     @Override
     public void start(Stage primaryStage) {
         Pane mainWindow = new Pane();
-        Scene scene = new Scene(mainWindow, 800, 750);
+        Scene scene = new Scene(mainWindow, 1000, 750);
         primaryStage.setScene(scene);
         primaryStage.setResizable(false);
-        primaryStage.setWidth(800);
+        primaryStage.setWidth(1000);
         primaryStage.setHeight(750);
         primaryStage.setTitle("Networks");
         MainUI controller = new MainUI(primaryStage, devicesList);

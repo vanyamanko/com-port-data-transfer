@@ -5,6 +5,7 @@ import static org.example.demo.service.SerialPortConstants.*;
 import com.fazecast.jSerialComm.SerialPort;
 import java.io.ByteArrayOutputStream;
 import java.util.Arrays;
+import java.util.concurrent.atomic.AtomicInteger;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextArea;
 import javafx.scene.paint.Color;
@@ -31,12 +32,19 @@ public class SerialPortReceiver {
         byte[] flagBytes = new byte[2];
         byte[] addressBytes = new byte[2];
         boolean dataStartFlag = false;
+        AtomicInteger collisionAmount = new AtomicInteger(0);
         int destinationAddress = serialPortManager.getPortAddress(
             portReceiveField
         );
 
         while (receivePort.readBytes(readByte, readByte.length) > 0) {
             byte currentByte = readByte[0];
+            if (currentByte == (byte) JAM_SIGNAL) {
+                dataStartFlag = false;
+                collisionAmount.incrementAndGet();
+                dataBytes.reset();
+                packageStructure.reset();
+            }
             shiftArray(flagBytes, currentByte);
 
             if (Arrays.equals(flagBytes, FLAG.getBytes())) {
@@ -46,7 +54,8 @@ public class SerialPortReceiver {
                     dataBytes,
                     addressBytes,
                     infoArea,
-                    destinationAddress
+                    destinationAddress,
+                    collisionAmount
                 );
                 continue;
             }
@@ -62,10 +71,17 @@ public class SerialPortReceiver {
             }
         }
         if (dataBytes.size() != 0 && packageStructure.size() != 0) {
-            fcsCheckAndDisplay(infoArea, packageStructure, dataBytes);
+            fcsCheckAndDisplay(
+                infoArea,
+                packageStructure,
+                dataBytes,
+                collisionAmount
+            );
             outputArea.appendText(receivedMassege.toString() + '\n');
         } else {
-            errorUI.showErrorDialog("Ports are not connected.");
+            errorUI.showErrorDialog(
+                "Ports are not connected or message is empty."
+            );
         }
         receivedMassege.reset();
     }
@@ -80,9 +96,13 @@ public class SerialPortReceiver {
         if (currentByte == ESC) {
             packageStructure.writeBytes("ESC".getBytes());
             receivePort.readBytes(readByte, readByte.length);
-            if (readByte[0] == BYTE_STUFFING) {
+            if (readByte[0] == BYTE_STUFFING_FLAG) {
                 packageStructure.writeBytes("0x01".getBytes());
                 dataBytes.writeBytes(FLAG.getBytes());
+            }
+            if (readByte[0] == BYTE_STUFFING_JAM_SIGNAL) {
+                packageStructure.writeBytes("0x02".getBytes());
+                dataBytes.writeBytes(String.valueOf(JAM_SIGNAL).getBytes());
             }
         } else {
             dataBytes.write(currentByte);
@@ -106,7 +126,8 @@ public class SerialPortReceiver {
         ByteArrayOutputStream dataBytes,
         byte[] addressBytes,
         TextFlow infoArea,
-        int destinationAddress
+        int destinationAddress,
+        AtomicInteger collisionAmount
     ) {
         receivePort.readBytes(addressBytes, addressBytes.length);
         int addressReceivePort = (addressBytes[1] & 0xFF) - 48;
@@ -126,7 +147,12 @@ public class SerialPortReceiver {
 
         if (dataBytes.size() != 0) {
             getAndRemoveLastByte(dataBytes);
-            fcsCheckAndDisplay(infoArea, packageStructure, dataBytes);
+            fcsCheckAndDisplay(
+                infoArea,
+                packageStructure,
+                dataBytes,
+                collisionAmount
+            );
             resetStreams(
                 packageStructure,
                 dataBytes,
@@ -158,7 +184,8 @@ public class SerialPortReceiver {
         TextFlow infoArea,
         ByteArrayOutputStream packageStructure,
         ByteArrayOutputStream dataBytes,
-        int unsignedFcsCalculated
+        int unsignedFcsCalculated,
+        AtomicInteger collisionAmount
     ) {
         if (dataBytes.size() != 0) {
             receivedMassege.writeBytes(dataBytes.toByteArray());
@@ -172,6 +199,8 @@ public class SerialPortReceiver {
             " | Baud rate: 9600" +
             " | Bytes in package: " +
             dataBytes.size() +
+            " | Number of collisions during transmission: " +
+            collisionAmount +
             " | Package structure: "
         );
         infoArea.getChildren().add(info);
@@ -183,6 +212,7 @@ public class SerialPortReceiver {
             infoArea
         );
         infoArea.getChildren().addAll(new Text("\n"));
+        collisionAmount.set(0);
     }
 
     private void addPackageStructureToInfo(
@@ -190,13 +220,15 @@ public class SerialPortReceiver {
         int unsignedFcsCalculated,
         TextFlow infoArea
     ) {
-        String[] parts = packageStructure.toString().split(ESC_BYTE_STUFFING);
+        String[] parts = packageStructure
+            .toString()
+            .split(ESC_BYTE_STUFFING_FLAG);
         for (int i = 0; i < parts.length; i++) {
             Text normalText = new Text(parts[i]);
             infoArea.getChildren().add(normalText);
 
             if (i < parts.length - 1) {
-                Text blueText = new Text(ESC_BYTE_STUFFING);
+                Text blueText = new Text(ESC_BYTE_STUFFING_FLAG);
                 blueText.setFill(Color.BLUE);
                 infoArea.getChildren().add(blueText);
             }
@@ -223,7 +255,8 @@ public class SerialPortReceiver {
     private void fcsCheckAndDisplay(
         TextFlow infoArea,
         ByteArrayOutputStream packageStructure,
-        ByteArrayOutputStream dataBytes
+        ByteArrayOutputStream dataBytes,
+        AtomicInteger collisionAmount
     ) {
         byte fcsReceived = getAndRemoveLastByte(dataBytes);
         byte fcsCalculated = (byte) SerialPortManager.calculateCRC8(
@@ -237,7 +270,8 @@ public class SerialPortReceiver {
                 infoArea,
                 packageStructure,
                 dataBytes,
-                unsignedFcsCalculated
+                unsignedFcsCalculated,
+                collisionAmount
             );
         } else {
             throw new IllegalArgumentException(
