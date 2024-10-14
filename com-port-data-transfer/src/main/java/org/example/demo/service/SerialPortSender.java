@@ -120,6 +120,9 @@ public class SerialPortSender {
         AtomicInteger bytesAvailablePrev
     ) {
         serialPortManager.delay(100);
+        if (receivePort.bytesAvailable() == 0) {
+            return false;
+        }
 
         if (
             (receivePort.bytesAvailable() - bytesAvailablePrev.get()) ==
@@ -149,7 +152,14 @@ public class SerialPortSender {
 
     private void delayBeforeResending(int collisionCount) {
         Random random = new Random();
-        int timeSlotAmount = random.nextInt((int) Math.pow(2, collisionCount));
+        int timeSlotAmount = random.nextInt(
+            (int) Math.pow(
+                2,
+                (collisionCount > MAX_QUANTITY_TO_INCREASE_INTERVAL
+                        ? MAX_QUANTITY_TO_INCREASE_INTERVAL
+                        : collisionCount)
+            )
+        );
         for (int i = 0; i < timeSlotAmount; i++) {
             serialPortManager.delay(TIME_SLOT_MS);
         }
