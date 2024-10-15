@@ -194,7 +194,7 @@ public class SerialPortReceiver {
             return;
         }
         Text info = new Text(
-            "Message: " +
+            "Data: " +
             dataBytes +
             " | Baud rate: 9600" +
             " | Bytes in package: " +

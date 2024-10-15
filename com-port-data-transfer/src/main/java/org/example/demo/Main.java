@@ -36,7 +36,7 @@ public class Main extends Application {
         primaryStage.setResizable(false);
         primaryStage.setWidth(1000);
         primaryStage.setHeight(750);
-        primaryStage.setTitle("Networks");
+        primaryStage.setTitle("com-port-data-transfer");
         MainUI controller = new MainUI(primaryStage, devicesList);
         controller.initializeUI();
     }

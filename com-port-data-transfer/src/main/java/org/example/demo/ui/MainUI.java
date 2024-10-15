@@ -37,12 +37,12 @@ public class MainUI {
             infoArea.getChildren().clear();
         });
 
-        Label portSendLabel = new Label("Choice send port number:");
+        Label portSendLabel = new Label("Select send port number:");
         ComboBox<String> portSendField = new ComboBox<>();
         portSendField.getItems().addAll(devicesList);
         portSendField.setValue("N/A");
 
-        Label portReceiveLabel = new Label("Choice receive port number:");
+        Label portReceiveLabel = new Label("Select receive port number:");
         ComboBox<String> portReceiveField = new ComboBox<>();
         portReceiveField.getItems().addAll(devicesList);
         portReceiveField.setValue("N/A");

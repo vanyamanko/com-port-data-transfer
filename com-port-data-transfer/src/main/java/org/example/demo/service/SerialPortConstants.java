@@ -13,7 +13,7 @@ public final class SerialPortConstants {
     public static final char BYTE_STUFFING_JAM_SIGNAL = 0x02;
     public static final String ESC_BYTE_STUFFING_FLAG = "ESC0x01";
     public static final double PROBABILITY_OF_COLLISION = 0.01;
-    public static final double TIME_SLOT_MS = 5;
+    public static final int TIME_SLOT_MS = 5;
     public static final int MAX_NUMBER_OF_COLLISION = 16;
     public static final int MAX_QUANTITY_TO_INCREASE_INTERVAL = 10;
 }
